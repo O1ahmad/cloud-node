@@ -2,8 +2,8 @@
 - name: Create a security group
   azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: "{{ azure_security_group_name }}"
-    location: "{{ location }}"
+    name: "{{ security_group_name }}"
+    location: "{{ cloud_location }}"
     rules:
       - name: AllowInboundRule
         protocol: "{{ item.protocol }}"
@@ -20,7 +20,7 @@
     resource_group: "{{ resource_group }}"
     name: "{{ vnet_name }}"
     address_prefixes: "10.0.0.0/16"
-    location: "{{ location }}"
+    location: "{{ cloud_location }}"
 
 - name: Create a subnet
   azure.azcollection.azure_rm_subnet:
@@ -28,21 +28,21 @@
     name: "{{ subnet_name }}"
     address_prefix: "10.0.1.0/24"
     virtual_network: "{{ vnet_name }}"
-    security_group: "{{ azure_security_group_name }}"
+    security_group: "{{ security_group_name }}"
 
 - name: Create a public IP address
   azure.azcollection.azure_rm_publicipaddress:
     resource_group: "{{ resource_group }}"
     allocation_method: Static
     name: "{{ public_ip_name }}"
-    location: "{{ location }}"
+    location: "{{ cloud_location }}"
   register: public_ip
 
 - name: Create a network interface
   azure.azcollection.azure_rm_networkinterface:
     resource_group: "{{ resource_group }}"
     name: "{{ nic_name }}"
-    location: "{{ location }}"
+    location: "{{ cloud_location }}"
     subnet: "{{ subnet_name }}"
     virtual_network: "{{ vnet_name }}"
     public_ip_name: "{{ public_ip_name }}"
@@ -51,12 +51,12 @@
 - name: Create an Azure instance
   azure.azcollection.azure_rm_virtualmachine:
     resource_group: "{{ resource_group }}"
-    name: "{{ instance_tag }}"
+    name: "{{ instance_name }}"
     vm_size: "{{ instance_type }}"
-    admin_username: azureuser
+    admin_username: "{{ cloud_user }}"
     ssh_password_enabled: false
     ssh_public_keys:
-      - path: /home/azureuser/.ssh/authorized_keys
+      - path: /home/{{ cloud_user }}/.ssh/authorized_keys
         key_data: "{{ ssh_public_key }}"
     image:
       offer: UbuntuServer
@@ -64,7 +64,7 @@
       sku: 18.04-LTS
       version: latest
     network_interfaces: "{{ network_interface.id }}"
-    location: "{{ location }}"
+    location: "{{ cloud_location }}"
     managed_disk_type: "Standard_LRS"
     os_disk_size_gb: "{{ storage_size }}"
   register: azure_vm
@@ -83,5 +83,5 @@
     name: "{{ public_ip.public_ip }}"
     groups: "{{ instance_tag }}"
     ansible_host: "{{ public_ip.public_ip }}"
-    ansible_user: azureuser
+    ansible_user: "{{ cloud_user }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"
