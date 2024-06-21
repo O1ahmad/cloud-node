@@ -1,0 +1,54 @@
+---
+- name: Create a security group
+  community.general.ali_security_group:
+    name: "{{ security_group_name }}"
+    description: "{{ security_group_description }}"
+    region: "{{ cloud_location }}"
+    state: present
+  register: security_group
+
+- name: Create a security group rule
+  community.general.ali_security_group_rule:
+    group_name: "{{ security_group_name }}"
+    region: "{{ cloud_location }}"
+    ip_protocol: "{{ item.protocol }}"
+    port_range: "{{ item.port }}/{{ item.port }}"
+    source_cidr_ip: "{{ item.cidr }}"
+    nic_type: internet
+    policy: accept
+    state: present
+  with_items: "{{ ingress_ports }}"
+  when: security_group is defined
+
+- name: Create an Alibaba Cloud ECS instance
+  community.general.ali_instance:
+    region: "{{ cloud_location }}"
+    instance_name: "{{ instance_name }}"
+    instance_type: "{{ instance_type }}"
+    image_id: "{{ instance_image }}"
+    vswitch_id: "{{ alicloud_vswitch_id }}"
+    security_groups:
+      - "{{ security_group.id }}"
+      - "{{ alicloud_security_group_id }}"
+    internet_max_bandwidth_out: 5
+    allocate_public_ip: "{{ public_ip }}"
+    instance_charge_type: PostPaid
+    state: present
+  register: alicloud_instance
+
+- name: Wait for the instance to be reachable via SSH
+  ansible.builtin.wait_for:
+    host: "{{ alicloud_instance.public_ip }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+  when: wait_for_ssh | bool
+
+- name: Add instance to inventory
+  ansible.builtin.add_host:
+    name: "{{ alicloud_instance.public_ip }}"
+    groups: "{{ instance_tag }}"
+    ansible_host: "{{ alicloud_instance.public_ip }}"
+    ansible_user: "{{ cloud_user }}"
+    ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"

@@ -65,7 +65,12 @@ Here's the updated README markdown to reflect the updated variable values:
 | :----------------------: | :-----------------------------------: | :-------: |
 |   _do_ssh_key_fingerprint_ | SSH key fingerprint for the droplet | ` `       |
 
+### Alibaba Cloud Specific Variables
 
+|           var            |              description              |  default  |
+| :----------------------: | :-----------------------------------: | :-------: |
+|   _alicloud_vswitch_id_  | Alibaba Cloud VSwitch ID              | ` `       |
+|   _alicloud_security_group_id_ | Alibaba Cloud Security Group ID | ` `       |
 
 ## Dependencies
 

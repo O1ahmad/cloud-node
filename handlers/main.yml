@@ -91,7 +91,7 @@
   when: uninstall | bool and cloud_provider == 'azure'
   listen: Uninstall
 
-  # Digital Ocean
+# Digital Ocean
 - name: Remove DigitalOcean droplet
   community.digitalocean.digital_ocean_droplet:
     oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
@@ -107,3 +107,31 @@
     state: absent
   when: uninstall | bool and cloud_provider == 'digital_ocean'
   listen: Uninstall
+
+# Alibaba Cloud
+- name: Remove Alibaba Cloud ECS instance
+  community.general.ali_instance:
+    region: "{{ cloud_location }}"
+    instance_name: "{{ instance_name }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'alibaba'
+
+- name: Remove security group rule
+  community.general.ali_security_group_rule:
+    group_name: "{{ security_group_name }}"
+    region: "{{ cloud_location }}"
+    ip_protocol: "{{ item.protocol }}"
+    port_range: "{{ item.port }}/{{ item.port }}"
+    source_cidr_ip: "{{ item.cidr }}"
+    nic_type: internet
+    policy: accept
+    state: absent
+  when: uninstall | bool and cloud_provider == 'alibaba'
+  with_items: "{{ ingress_ports }}"
+
+- name: Remove security group
+  community.general.ali_security_group:
+    name: "{{ security_group_name }}"
+    region: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'alibaba'
