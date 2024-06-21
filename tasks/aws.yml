@@ -1,11 +1,9 @@
 ---
 - name: Create a security group
-  community.aws.ec2_group:
+  amazon.aws.ec2_security_group:
     name: "{{ security_group_name }}"
     description: "{{ security_group_description }}"
-    region: "{{ region }}"
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ cloud_region }}"
     rules:
       - proto: "{{ item.protocol }}"
         from_port: "{{ item.port }}"
@@ -16,14 +14,12 @@
   register: security_group
 
 - name: Create an EC2 instance
-  community.aws.ec2_instance:
+  amazon.aws.ec2_instance:
     name: "{{ instance_tag }}"
     instance_type: "{{ instance_type }}"
-    region: "{{ region }}"
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ cloud_region }}"
     image_id: "{{ ami_id }}"
-    wait: true
+    wait: "{{ wait_for_ssh | bool }}"
     instance_tags:
       Name: "{{ instance_tag }}"
     volumes:
@@ -41,6 +37,7 @@
     delay: 60
     timeout: 320
     state: started
+  when: wait_for_ssh | bool
 
 - name: Add instance to inventory
   ansible.builtin.add_host:

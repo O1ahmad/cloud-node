@@ -1,7 +1,7 @@
 ---
 - name: Create a firewall rule
   google.cloud.gcp_compute_firewall:
-    name: "{{ security_group_name }}"
+    name: "{{ gcp_security_group_name }}"
     project: "{{ gcp_project }}"
     network: "default"
     allowed:
@@ -41,6 +41,7 @@
     delay: 60
     timeout: 320
     state: started
+  when: wait_for_ssh | bool
 
 - name: Add instance to inventory
   ansible.builtin.add_host:
