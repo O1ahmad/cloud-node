@@ -20,7 +20,7 @@
     image: "{{ instance_image }}"
     ssh_keys: ["{{ do_ssh_key_fingerprint }}"]
     wait: "{{ wait_for_ssh | bool }}"
-    tags: [ "{{ instance_tag }}" ]
+    tags: ["{{ instance_tag }}"]
   register: do_droplet
 
 - name: Wait for the instance to be reachable via SSH

@@ -1,8 +1,7 @@
-
 ---
 galaxy_info:
   author: O1 Labs
-  role_name: cloud-node
+  role_name: cloud_node
   namespace: 0x0i
   description: Ansible role for provisioning nodes across cloud providers
   company: O1.IO
@@ -21,5 +20,3 @@ galaxy_info:
   galaxy_tags:
     - cloud
     - node
-    - instance-types
-    - machine-types
