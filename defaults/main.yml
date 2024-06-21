@@ -32,3 +32,7 @@ ssh_public_key: ""
 
 # DigitalOcean specific variables
 do_ssh_key_fingerprint: ""
+
+# Alibaba Cloud specific variables
+alicloud_vswitch_id: ""
+alicloud_security_group_id: ""
