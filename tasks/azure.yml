@@ -2,7 +2,7 @@
 - name: Create a security group
   azure.azcollection.azure_rm_securitygroup:
     resource_group: "{{ resource_group }}"
-    name: "{{ security_group_name }}"
+    name: "{{ azure_security_group_name }}"
     location: "{{ location }}"
     rules:
       - name: AllowInboundRule
@@ -28,7 +28,7 @@
     name: "{{ subnet_name }}"
     address_prefix: "10.0.1.0/24"
     virtual_network: "{{ vnet_name }}"
-    security_group: "{{ security_group_name }}"
+    security_group: "{{ azure_security_group_name }}"
 
 - name: Create a public IP address
   azure.azcollection.azure_rm_publicipaddress:
@@ -76,6 +76,7 @@
     delay: 60
     timeout: 320
     state: started
+  when: wait_for_ssh | bool
 
 - name: Add instance to inventory
   ansible.builtin.add_host:
