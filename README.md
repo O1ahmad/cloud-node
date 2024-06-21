@@ -8,7 +8,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/0x0I/cloud-node?color=yellow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-Provision a node across the various cloud infrastructure providers
+Provision a node across the various cloud infrastructure providers with security best practices.
 
 ## Requirements
 
@@ -42,9 +42,9 @@ Provision a node across the various cloud infrastructure providers
 
 - Provision a t3.micro EC2 instance:
 ```
-  - role: 0x0I.cloud-node
+  - role: 0x0i.cloud-node
     vars:
-      namcloud_provider: aws
+      cloud_provider: aws
       image: ami-0e001c9271cf7f3b9
       instance: "t3.micro"
 ```
