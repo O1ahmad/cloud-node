@@ -32,3 +32,11 @@ public_ip_name: ""
 nic_name: ""
 azure_security_group_name: "azure-security-group"
 ssh_public_key: ""
+
+# DigitalOcean specific variables
+do_token: ""
+do_region: "nyc3"
+do_size: "s-1vcpu-1gb"
+do_image: "ubuntu-20-04-x64"
+do_ssh_key_fingerprint: ""
+do_firewall_name: "do-firewall"

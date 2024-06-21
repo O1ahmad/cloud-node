@@ -62,7 +62,16 @@ Here's the updated README markdown to reflect the updated variable values:
 |   _azure_security_group_name_ | Name of the Azure security group | `azure-security-group`       |
 |   _ssh_public_key_       | SSH public key for the Azure instance | ` `       |
 
-This organization makes it clear which variables are common across all providers and which ones are specific to AWS, GCP, or Azure, and reflects the updated values for `ami_id` and `image`.
+### DigitalOcean Specific Variables
+
+|           var            |              description              |  default  |
+| :----------------------: | :-----------------------------------: | :-------: |
+|   _do_token_             |  DigitalOcean API token               | ` `       |
+|   _do_region_            |  DigitalOcean region                  | `nyc3`    |
+|   _do_size_              |  DigitalOcean droplet size            | `s-1vcpu-1gb` |
+|   _do_image_             |  DigitalOcean droplet image           | `ubuntu-20-04-x64` |
+|   _do_ssh_key_fingerprint_ | SSH key fingerprint for the droplet | ` `       |
+|   _do_firewall_name_     |  Name of the DigitalOcean firewall    | `do-firewall` |
 
 
 ## Dependencies
