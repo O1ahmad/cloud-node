@@ -34,16 +34,13 @@ Provision a node across the various cloud infrastructure providers
 
 `-`
 
-```
 ## Example Playbook
-
 ```
-- hosts: servers
+- hosts: controller
   roles:
 ```
 
-- Launch a container that sleeps for infinity:
-
+- Provision a t3.micro EC2 instance:
 ```
   - role: 0x0I.cloud-node
     vars:
