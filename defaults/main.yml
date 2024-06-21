@@ -1,5 +1,6 @@
 ---
 # Common variables
+cloud_provider: "aws"
 cloud_location: "us-east-1"
 instance_name: "default-instance"
 instance_tag: ""
@@ -16,6 +17,7 @@ security_group_name: "default-security-group"
 security_group_description: "Default Security Group"
 instance_image: "ubuntu-20-04-x64"
 cloud_user: "ubuntu"
+uninstall: false
 
 # GCP specific variables
 gcp_project: ""

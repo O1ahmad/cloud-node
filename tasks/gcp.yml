@@ -9,6 +9,7 @@
         ports: ["{{ item.port }}"]
     source_ranges: ["{{ item.cidr }}"]
     state: present
+    auth_kind: accesstoken
   with_items: "{{ ingress_ports }}"
   register: firewall_rule
 
@@ -18,6 +19,7 @@
     machine_type: "{{ instance_type }}"
     zone: "{{ cloud_location }}"
     project: "{{ gcp_project }}"
+    auth_kind: accesstoken
     disks:
       - auto_delete: true
         boot: true

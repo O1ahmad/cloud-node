@@ -1,2 +1,109 @@
 ---
-# handlers file for cloud-node
+# AWS
+- name: Remove EC2 instance
+  amazon.aws.ec2_instance:
+    name: "{{ instance_name }}"
+    region: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'aws'
+  listen: Uninstall
+
+- name: Remove security group
+  amazon.aws.ec2_security_group:
+    name: "{{ security_group_name }}"
+    region: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'aws'
+  listen: Uninstall
+
+# GCP
+- name: Remove GCP instance
+  google.cloud.gcp_compute_instance:
+    name: "{{ instance_name }}"
+    zone: "{{ cloud_location }}"
+    project: "{{ gcp_project }}"
+    state: absent
+    auth_kind: accesstoken
+  when: uninstall | bool and cloud_provider == 'gcp'
+  listen: Uninstall
+
+- name: Remove firewall rule
+  google.cloud.gcp_compute_firewall:
+    name: "{{ security_group_name }}"
+    project: "{{ gcp_project }}"
+    state: absent
+    auth_kind: accesstoken
+  when: uninstall | bool and cloud_provider == 'gcp'
+  listen: Uninstall
+
+# Azure
+- name: Remove Azure instance
+  azure.azcollection.azure_rm_virtualmachine:
+    resource_group: "{{ resource_group }}"
+    name: "{{ instance_name }}"
+    location: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+- name: Remove network interface
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: "{{ resource_group }}"
+    name: "{{ nic_name }}"
+    location: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+- name: Remove public IP address
+  azure.azcollection.azure_rm_publicipaddress:
+    resource_group: "{{ resource_group }}"
+    name: "{{ public_ip_name }}"
+    location: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+- name: Remove subnet
+  azure.azcollection.azure_rm_subnet:
+    resource_group: "{{ resource_group }}"
+    name: "{{ subnet_name }}"
+    virtual_network: "{{ vnet_name }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+- name: Remove virtual network
+  azure.azcollection.azure_rm_virtualnetwork:
+    resource_group: "{{ resource_group }}"
+    name: "{{ vnet_name }}"
+    location: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+- name: Remove security group
+  azure.azcollection.azure_rm_securitygroup:
+    resource_group: "{{ resource_group }}"
+    name: "{{ security_group_name }}"
+    location: "{{ cloud_location }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'azure'
+  listen: Uninstall
+
+  # Digital Ocean
+- name: Remove DigitalOcean droplet
+  community.digitalocean.digital_ocean_droplet:
+    oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+    name: "{{ instance_name }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'digital_ocean'
+  listen: Uninstall
+
+- name: Remove firewall
+  community.digitalocean.digital_ocean_firewall:
+    oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+    name: "{{ security_group_name }}"
+    state: absent
+  when: uninstall | bool and cloud_provider == 'digital_ocean'
+  listen: Uninstall
