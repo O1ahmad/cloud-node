@@ -1,0 +1,3 @@
+---
+- name: Setup cloud provider node
+  ansible.builtin.include_tasks: "./{{ cloud_provider }}.yml"

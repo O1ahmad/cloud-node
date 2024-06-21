@@ -1,0 +1,51 @@
+---
+- name: Create a firewall rule
+  google.cloud.gcp_compute_firewall:
+    name: "{{ security_group_name }}"
+    project: "{{ gcp_project }}"
+    network: "default"
+    allowed:
+      - ip_protocol: "{{ item.protocol }}"
+        ports: ["{{ item.port }}"]
+    source_ranges: ["{{ item.cidr }}"]
+    state: present
+  with_items: "{{ ingress_ports }}"
+  register: firewall_rule
+
+- name: Create a GCP instance
+  google.cloud.gcp_compute_instance:
+    name: "{{ instance_tag }}"
+    machine_type: "{{ instance_type }}"
+    zone: "{{ zone }}"
+    project: "{{ gcp_project }}"
+    disks:
+      - auto_delete: true
+        boot: true
+        initialize_params:
+          source_image: "{{ image }}"
+          disk_size_gb: "{{ storage_size }}"
+    network_interfaces:
+      - network: "default"
+        access_configs:
+          - name: External NAT
+            type: ONE_TO_ONE_NAT
+    tags:
+      items:
+        - "{{ instance_tag }}"
+  register: gcp_instance
+
+- name: Wait for the instance to be reachable via SSH
+  ansible.builtin.wait_for:
+    host: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+
+- name: Add instance to inventory
+  ansible.builtin.add_host:
+    name: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    groups: "{{ instance_tag }}"
+    ansible_host: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    ansible_user: debian
+    ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"

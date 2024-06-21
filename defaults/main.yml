@@ -1,0 +1,16 @@
+---
+cloud_provider: aws
+region: us-east-1
+
+# Security group and EC2 instance variables
+security_group_name:
+security_group_description: "Security group for EC2 instance"
+ingress_ports:
+  - port: 22
+    protocol: tcp
+    cidr: 0.0.0.0/0
+
+instance_type: t2.micro
+storage_size: 8
+public_ip: true
+instance_tag:
