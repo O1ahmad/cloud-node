@@ -77,7 +77,7 @@ Here's the updated README markdown to reflect the updated variable values:
   roles:
 ```
 
-- Provision a t3.micro EC2 instance:
+- Provision a `t3.micro` EC2 instance:
 ```
   - role: 0x0i.cloud-node
     vars:
