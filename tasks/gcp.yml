@@ -1,7 +1,7 @@
 ---
 - name: Create a firewall rule
   google.cloud.gcp_compute_firewall:
-    name: "{{ gcp_security_group_name }}"
+    name: "{{ security_group_name }}"
     project: "{{ gcp_project }}"
     network: "default"
     allowed:
@@ -14,15 +14,15 @@
 
 - name: Create a GCP instance
   google.cloud.gcp_compute_instance:
-    name: "{{ instance_tag }}"
+    name: "{{ instance_name }}"
     machine_type: "{{ instance_type }}"
-    zone: "{{ zone }}"
+    zone: "{{ cloud_location }}"
     project: "{{ gcp_project }}"
     disks:
       - auto_delete: true
         boot: true
         initialize_params:
-          source_image: "{{ image }}"
+          source_image: "{{ instance_image }}"
           disk_size_gb: "{{ storage_size }}"
     network_interfaces:
       - network: "default"
@@ -48,5 +48,5 @@
     name: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
     groups: "{{ instance_tag }}"
     ansible_host: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
-    ansible_user: debian
+    ansible_user: "{{ cloud_user }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"

@@ -1,6 +1,7 @@
 ---
 # Common variables
-cloud_region: "us-east-1"
+cloud_location: "us-east-1"
+instance_name: "default-instance"
 instance_tag: ""
 instance_type: "t2.micro"
 storage_size: 30
@@ -11,32 +12,21 @@ ingress_ports:
   - protocol: tcp
     port: 22
     cidr: "0.0.0.0/0"
-
-# AWS specific variables
-ami_id: "ami-0d5d9d301c853a04a" # Ubuntu 20.04 LTS AMI in us-east-1
-security_group_name: "aws-security-group"
-security_group_description: "AWS Security Group"
+security_group_name: "default-security-group"
+security_group_description: "Default Security Group"
+instance_image: "ubuntu-20-04-x64"
+cloud_user: "ubuntu"
 
 # GCP specific variables
 gcp_project: ""
-image: "projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20210623" # Ubuntu 20.04 LTS image
-zone: "us-east1-b"
-gcp_security_group_name: "gcp-firewall-rule"
 
 # Azure specific variables
 resource_group: ""
-location: "eastus"
 vnet_name: ""
 subnet_name: ""
 public_ip_name: ""
 nic_name: ""
-azure_security_group_name: "azure-security-group"
 ssh_public_key: ""
 
 # DigitalOcean specific variables
-do_token: ""
-do_region: "nyc3"
-do_size: "s-1vcpu-1gb"
-do_image: "ubuntu-20-04-x64"
 do_ssh_key_fingerprint: ""
-do_firewall_name: "do-firewall"
