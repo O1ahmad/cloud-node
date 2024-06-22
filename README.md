@@ -27,7 +27,7 @@ Here's the updated README markdown to reflect the updated variable values:
 |   _cloud_user_      |      User for SSH and instance management                  |     `ubuntu`      |
 |   _instance_name_    |          Name of the instance                              |     `default-instance` |
 |   _instance_type_   |               Instance type for the deployment             |     `t2.micro` (AWS), `n1-standard-1` (GCP), `Standard_B1s` (Azure), `s-1vcpu-1gb` (DO)     |
-|   _instance_image_  |      Instance image for the deployment                    |     `ubuntu-20-04-x64`    |
+|   _instance_image_  |      Instance image for the deployment                    |     `ami-0e001c9271cf7f3b9`    |
 |   _instance_tag_     |          Tag for the instance and security group           |        ` `         |
 |   _storage_size_    |           Storage size for the instance in GB              |       `30`         |
 |   _public_ip_       |        Whether to assign a public IP to the instance       |      `true`        |
