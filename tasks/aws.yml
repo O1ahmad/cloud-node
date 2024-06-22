@@ -13,6 +13,26 @@
   with_items: "{{ ingress_ports }}"
   register: security_group
 
+- name: Create an AWS SSH key pair if not defined
+  amazon.aws.ec2_key:
+    name: "default-keypair"
+    region: "{{ cloud_location }}"
+    state: present
+  register: aws_keypair
+  when: ssh_public_key == ""
+
+- name: Save AWS SSH private key
+  ansible.builtin.copy:
+    content: "{{ aws_keypair.key.private_key }}"
+    dest: "~/.ssh/default-keypair.pem"
+    mode: '0600'
+  when: ssh_public_key == ""
+
+- name: Set AWS SSH keypair variable
+  ansible.builtin.set_fact:
+    ssh_public_key: "{{ aws_keypair.key.name }}"
+  when: ssh_public_key == ""
+
 - name: Create an EC2 instance
   amazon.aws.ec2_instance:
     name: "{{ instance_name }}"
@@ -20,6 +40,7 @@
     region: "{{ cloud_location }}"
     image_id: "{{ instance_image }}"
     wait: "{{ wait_for_ssh | bool }}"
+    key_name: "{{ ssh_public_key }}"
     instance_tags:
       Name: "{{ instance_tag }}"
     volumes:
