@@ -31,7 +31,8 @@ Here's the updated README markdown to reflect the updated variable values:
 |   _instance_tag_     |          Tag for the instance and security group           |        ` `         |
 |   _storage_size_    |           Storage size for the instance in GB              |       `30`         |
 |   _public_ip_       |        Whether to assign a public IP to the instance       |      `true`        |
-| _ssh_private_key_path_ |        Path to the SSH private key for the instance     | `~/.ssh/id_rsa`    |
+| _ssh_private_key_path_ |        Path to the SSH private key for the instance     | `~/.ssh/default`    |
+|   _ssh_public_key_       | SSH public key or keypair for the Cloud instance | `~/.ssh/default.pub `       |
 |   _wait_for_ssh_    |     Whether to wait for SSH to become available during setup |     `true`        |
 |  _ingress_ports_    | List of ingress ports and protocols for the security group |  `[{ protocol: 'tcp', port: 22, cidr: '0.0.0.0/0' }]` |
 |  _security_group_name_    |       Name of the security group to create            | `default-security-group` |
@@ -57,7 +58,6 @@ Here's the updated README markdown to reflect the updated variable values:
 |   _subnet_name_          |      Name of the Azure subnet         | ` ` |
 |   _public_ip_name_       |  Name of the Azure public IP address  | ` ` |
 |   _nic_name_             |     Name of the Azure network interface | ` ` |
-|   _ssh_public_key_       | SSH public key for the Azure instance | ` `       |
 
 ### DigitalOcean Specific Variables
 

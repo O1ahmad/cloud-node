@@ -7,7 +7,8 @@ instance_tag: ""
 instance_type: "t2.micro"
 storage_size: 30
 public_ip: true
-ssh_private_key_path: "~/.ssh/id_rsa"
+ssh_private_key_path: "~/.ssh/default"
+ssh_public_key: "{{ lookup('file', '~/.ssh/default.pub') }}"
 wait_for_ssh: true
 ingress_ports:
   - protocol: tcp
@@ -28,10 +29,9 @@ vnet_name: ""
 subnet_name: ""
 public_ip_name: ""
 nic_name: ""
-ssh_public_key: ""
 
 # DigitalOcean specific variables
-do_ssh_key_fingerprint: ""
+do_ssh_key_fingerprint: []
 
 # Alibaba Cloud specific variables
 alicloud_vswitch_id: ""
