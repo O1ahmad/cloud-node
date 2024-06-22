@@ -41,13 +41,27 @@ Here's the updated README markdown to reflect the updated variable values:
 
 ### AWS Specific Variables
 
-(none)
+#### Environment Variables
+
+To authorize access to your AWS resources, set the following environment variables:
+```bash
+export AWS_ACCESS_KEY_ID=<your-access-key-id>
+export AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
+export AWS_DEFAULT_REGION=<your-region>
+```
 
 ### GCP Specific Variables
 
 |           var            |              description              |   default    |
 | :----------------------: | :-----------------------------------: | :----------: |
 |   _gcp_project_          |           GCP project ID             | ` ` |
+
+#### Environment Variables
+
+To authorize access to your GCP resources, set the following environment variable:
+```
+export GCP_AUTH_KIND=<path-to-your-service-account-json>
+```
 
 ### Azure Specific Variables
 
@@ -59,11 +73,29 @@ Here's the updated README markdown to reflect the updated variable values:
 |   _public_ip_name_       |  Name of the Azure public IP address  | ` ` |
 |   _nic_name_             |     Name of the Azure network interface | ` ` |
 
+#### Environment Variables
+
+To authorize access to your Azure resources, set the following environment variables:
+```
+export AZURE_SUBSCRIPTION_ID=<your-subscription-id>
+export AZURE_CLIENT_ID=<your-client-id>
+export AZURE_SECRET=<your-secret>
+export AZURE_TENANT=<your-tenant-id>
+```
+
 ### DigitalOcean Specific Variables
 
 |           var            |              description              |  default  |
 | :----------------------: | :-----------------------------------: | :-------: |
 |   _do_ssh_key_fingerprint_ | SSH key fingerprint for the droplet | ` `       |
+
+
+#### Environment Variables
+
+To authorize access to your DigitalOcean resources, set the following environment variable:
+```
+export DO_API_TOKEN=<your-api-token>
+```
 
 ### Alibaba Cloud Specific Variables
 
@@ -71,6 +103,15 @@ Here's the updated README markdown to reflect the updated variable values:
 | :----------------------: | :-----------------------------------: | :-------: |
 |   _alicloud_vswitch_id_  | Alibaba Cloud VSwitch ID              | ` `       |
 |   _alicloud_security_group_id_ | Alibaba Cloud Security Group ID | ` `       |
+
+#### Environment Variables
+
+To authorize access to your Alibaba Cloud resources, set the following environment variables:
+```
+export ALICLOUD_ACCESS_KEY=<your-access-key-id>
+export ALICLOUD_SECRET_KEY=<your-secret-access-key>
+export ALICLOUD_REGION=<your-region>
+```
 
 ## Dependencies
 
