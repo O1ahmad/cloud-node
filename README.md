@@ -14,8 +14,6 @@ Provision a node across the various cloud infrastructure providers with security
 
 `-`
 
-Here's the updated README markdown to reflect the updated variable values:
-
 ## Role Variables
 
 ### Common Variables
