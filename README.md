@@ -97,22 +97,6 @@ To authorize access to your DigitalOcean resources, set the following environmen
 export DO_API_TOKEN=<your-api-token>
 ```
 
-### Alibaba Cloud Specific Variables
-
-|           var            |              description              |  default  |
-| :----------------------: | :-----------------------------------: | :-------: |
-|   _alicloud_vswitch_id_  | Alibaba Cloud VSwitch ID              | ` `       |
-|   _alicloud_security_group_id_ | Alibaba Cloud Security Group ID | ` `       |
-
-#### Environment Variables
-
-To authorize access to your Alibaba Cloud resources, set the following environment variables:
-```
-export ALICLOUD_ACCESS_KEY=<your-access-key-id>
-export ALICLOUD_SECRET_KEY=<your-secret-access-key>
-export ALICLOUD_REGION=<your-region>
-```
-
 ## Dependencies
 
 `-`
