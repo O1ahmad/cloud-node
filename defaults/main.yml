@@ -10,13 +10,15 @@ public_ip: true
 ssh_private_key_path:
 ssh_public_key:
 wait_for_ssh: true
+ssh_setup_wait: 5
 ingress_ports:
-  - protocol: tcp
-    port: 22
-    cidr: "0.0.0.0/0"
+- proto: tcp
+  ports:
+  - 22
+  cidr_ip: "0.0.0.0/0"
 security_group_name: "default-security-group"
 security_group_description: "Default Security Group"
-instance_image: "ami-04b70fa74e45c3917" # Ubuntu Server 24.04 LTS
+instance_image: "ami-04b70fa74e45c3917"
 cloud_user: "ubuntu"
 uninstall: false
 
@@ -32,7 +34,3 @@ nic_name: ""
 
 # DigitalOcean specific variables
 do_ssh_key_fingerprint: []
-
-# Alibaba Cloud specific variables
-alicloud_vswitch_id: ""
-alicloud_security_group_id: ""

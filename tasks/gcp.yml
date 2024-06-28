@@ -3,13 +3,11 @@
   google.cloud.gcp_compute_firewall:
     name: "{{ security_group_name }}"
     project: "{{ gcp_project }}"
-    network: "default"
     allowed:
-      - ip_protocol: "{{ item.protocol }}"
-        ports: ["{{ item.port }}"]
-    source_ranges: ["{{ item.cidr }}"]
+      - ip_protocol: "{{ item.proto }}"
+        ports: "{{ item.ports }}"
+    source_ranges: ["{{ item.cidr_ip }}"]
     state: present
-    auth_kind: accesstoken
   with_items: "{{ ingress_ports }}"
   register: firewall_rule
 
@@ -19,7 +17,6 @@
     machine_type: "{{ instance_type }}"
     zone: "{{ cloud_location }}"
     project: "{{ gcp_project }}"
-    auth_kind: accesstoken
     disks:
       - auto_delete: true
         boot: true
@@ -27,10 +24,11 @@
           source_image: "{{ instance_image }}"
           disk_size_gb: "{{ storage_size }}"
     network_interfaces:
-      - network: "default"
-        access_configs:
+      - access_configs:
           - name: External NAT
             type: ONE_TO_ONE_NAT
+    metadata:
+      ssh-keys: "{{ cloud_user }}:{{ ssh_public_key }}"
     tags:
       items:
         - "{{ instance_tag }}"
@@ -38,17 +36,17 @@
 
 - name: Wait for the instance to be reachable via SSH
   ansible.builtin.wait_for:
-    host: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    host: "{{ gcp_instance.networkInterfaces[0].accessConfigs[0].natIP }}"
     port: 22
-    delay: 60
+    delay: 1
     timeout: 320
     state: started
   when: wait_for_ssh | bool
 
 - name: Add instance to inventory
   ansible.builtin.add_host:
-    name: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    name: "{{ gcp_instance.networkInterfaces[0].accessConfigs[0].natIP }}"
     groups: "{{ instance_tag }}"
-    ansible_host: "{{ gcp_instance.instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+    ansible_host: "{{ gcp_instance.networkInterfaces[0].accessConfigs[0].natIP }}"
     ansible_user: "{{ cloud_user }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"

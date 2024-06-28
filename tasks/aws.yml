@@ -4,13 +4,8 @@
     name: "{{ security_group_name }}"
     description: "{{ security_group_description }}"
     region: "{{ cloud_location }}"
-    rules:
-      - proto: "{{ item.protocol }}"
-        from_port: "{{ item.port }}"
-        to_port: "{{ item.port }}"
-        cidr_ip: "{{ item.cidr }}"
+    rules: "{{ ingress_ports }}"
     state: present
-  with_items: "{{ ingress_ports }}"
   register: security_group
 
 - name: Create an AWS SSH key pair if not defined
@@ -41,7 +36,7 @@
     image_id: "{{ instance_image }}"
     security_groups:
       - default
-      - "{{ security_group.results[0].group_id }}"
+      - "{{ security_group.group_id }}"
     wait: "{{ wait_for_ssh | bool }}"
     key_name: "{{ ssh_public_key }}"
     tags:
