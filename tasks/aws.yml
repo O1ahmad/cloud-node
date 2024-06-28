@@ -53,7 +53,7 @@
   ansible.builtin.wait_for:
     host: "{{ ec2.instances[0].public_ip_address }}"
     port: 22
-    delay: 1
+    delay: 10
     timeout: 320
     state: started
   when: wait_for_ssh | bool

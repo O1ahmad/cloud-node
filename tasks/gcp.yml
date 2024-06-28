@@ -38,7 +38,7 @@
   ansible.builtin.wait_for:
     host: "{{ gcp_instance.networkInterfaces[0].accessConfigs[0].natIP }}"
     port: 22
-    delay: 1
+    delay: 10
     timeout: 320
     state: started
   when: wait_for_ssh | bool
