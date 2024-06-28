@@ -1,41 +1,80 @@
 ---
-- name: Create a firewall
-  community.digitalocean.digital_ocean_firewall:
-    oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-    state: present
-    name: "{{ security_group_name }}"
-    inbound_rules:
-      - protocol: "{{ item.protocol }}"
-        port_range: "{{ item.port }}"
-        source_addresses: "{{ item.cidr }}"
-  with_items: "{{ ingress_ports }}"
-  register: firewall
+- name: Generate an SSH key pair
+  community.crypto.openssh_keypair:
+    path: "~/.ssh/do.pem"
+    type: rsa
+    size: 2048
+  register: ssh_key
+  when: ssh_public_key is none or ssh_public_key is undefined
+
+- name: Upload the public key to DigitalOcean
+  community.digitalocean.digital_ocean_sshkey:
+    name: "default-keypair"
+    ssh_pub_key: "{{ ssh_key.public_key }}"
+  register: do_ssh_key
+  when: ssh_public_key is none or ssh_public_key is undefined
+
+- name: Set Digital Ocean SSH keypair variable
+  ansible.builtin.set_fact:
+    ssh_public_key: "{{ do_ssh_key.data.ssh_key.fingerprint }}"
+  when: ssh_public_key is none or ssh_public_key is undefined
 
 - name: Create a DigitalOcean droplet
   community.digitalocean.digital_ocean_droplet:
-    oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
     name: "{{ instance_name }}"
+    unique_name: true
     region: "{{ cloud_location }}"
     size: "{{ instance_type }}"
     image: "{{ instance_image }}"
-    ssh_keys: ["{{ do_ssh_key_fingerprint }}"]
+    ssh_keys: ["{{ ssh_public_key }}"]
     wait: "{{ wait_for_ssh | bool }}"
+    wait_timeout: 120
     tags: ["{{ instance_tag }}"]
   register: do_droplet
 
+- name: Aggregate Digital Ocean firewall rules
+  ansible.builtin.set_fact:
+    do_inbound_rules: "{{ do_inbound_rules | default([]) + [{'protocol': item.proto, 'ports': item.ports, 'sources': { 'addresses': [item.cidr_ip] }}] }}"
+  loop: "{{ ingress_ports }}"
+
+- name: Create a firewall
+  community.digitalocean.digital_ocean_firewall:
+    name: "{{ security_group_name }}"
+    inbound_rules: "{{ do_inbound_rules }}"
+    outbound_rules:
+      - protocol: "tcp"
+        ports: "1-65535"
+        destinations:
+          addresses: ["0.0.0.0/0", "::/0"]
+      - protocol: "udp"
+        ports: "1-65535"
+        destinations:
+          addresses: ["0.0.0.0/0", "::/0"]
+      - protocol: "icmp"
+        ports: "1-65535"
+        destinations:
+          addresses: ["0.0.0.0/0", "::/0"]
+    droplet_ids: ["{{ do_droplet.data.droplet.id }}"]
+  register: firewall
+
+# Reset inbound rules for subsequent iterations
+- name: Reset Digital Ocean firewall rules
+  ansible.builtin.set_fact:
+    do_inbound_rules: []
+
 - name: Wait for the instance to be reachable via SSH
   ansible.builtin.wait_for:
-    host: "{{ do_droplet.data.ip_address }}"
+    host: "{{ (do_droplet.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('<none>', true) }}"
     port: 22
-    delay: 60
+    delay: 10
     timeout: 320
     state: started
   when: wait_for_ssh | bool
 
 - name: Add instance to inventory
   ansible.builtin.add_host:
-    name: "{{ do_droplet.data.ip_address }}"
+    name: "{{ (do_droplet.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('<none>', true) }}"
     groups: "{{ instance_tag }}"
-    ansible_host: "{{ do_droplet.data.ip_address }}"
+    ansible_host: "{{ (do_droplet.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('<none>', true) }}"
     ansible_user: "{{ cloud_user }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"
