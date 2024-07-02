@@ -45,7 +45,6 @@ To authorize access to your AWS resources, set the following environment variabl
 ```bash
 export AWS_ACCESS_KEY_ID=<your-access-key-id>
 export AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
-export AWS_DEFAULT_REGION=<your-region>
 ```
 
 ### GCP Specific Variables
@@ -58,7 +57,8 @@ export AWS_DEFAULT_REGION=<your-region>
 
 To authorize access to your GCP resources, set the following environment variable:
 ```
-export GCP_AUTH_KIND=<path-to-your-service-account-json>
+export GCP_AUTH_KIND=serviceaccount
+export GCP_SERVICE_ACCOUNT_FILE=<path-to-your-service-account-json>
 ```
 
 ### Azure Specific Variables
@@ -97,17 +97,24 @@ export DO_API_TOKEN=<your-api-token>
 
 ## Dependencies
 
-`-`
+```
+roles: None
+collections:
+- amazon.aws
+- azure.azcollection
+- community.digitalocean
+- google.cloud
+```
 
 ## Example Playbook
 ```
-- hosts: controller
+- hosts: localhost
   roles:
 ```
 
 - Provision a `t3.micro` EC2 instance:
 ```
-  - role: 0x0i.cloud-node
+  - role: ./cloud-node
     vars:
       cloud_provider: aws
       image: ami-0e001c9271cf7f3b9

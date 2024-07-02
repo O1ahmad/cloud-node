@@ -33,7 +33,7 @@
   register: do_droplet
 
 - name: Aggregate Digital Ocean firewall rules
-  set_fact:
+  ansible.builtin.set_fact:
     do_inbound_rules: "{{ do_inbound_rules | default([]) + [{'protocol': item.proto, 'ports': item.ports, 'sources': { 'addresses': [item.cidr_ip] }}] }}"
   loop: "{{ ingress_ports }}"
 
@@ -59,7 +59,7 @@
 
 # Reset inbound rules for subsequent iterations
 - name: Reset Digital Ocean firewall rules
-  set_fact:
+  ansible.builtin.set_fact:
     do_inbound_rules: []
 
 - name: Wait for the instance to be reachable via SSH
