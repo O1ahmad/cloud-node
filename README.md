@@ -36,6 +36,7 @@ Provision a node across the various cloud infrastructure providers with security
 |  _security_group_name_    |       Name of the security group to create            | `default-security-group` |
 |  _security_group_description_ |  Description for the security group  | `Default Security Group` |
 |   _uninstall_       |      Whether to uninstall/remove the created resources     |     `false`       |
+|   _preemptible_       |      Whether to launch preemptible/spot instances     |     `false`       |
 
 ### AWS Specific Variables
 

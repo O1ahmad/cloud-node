@@ -63,6 +63,7 @@
       publisher: Canonical
       sku: 18.04-LTS
       version: latest
+    priority: "{{ 'Spot' if preemptible else 'None' }}"
     network_interfaces: "{{ network_interface.id }}"
     location: "{{ cloud_location }}"
     managed_disk_type: "Standard_LRS"

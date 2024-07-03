@@ -2,3 +2,4 @@
 meta/main.yml schema[meta]
 tasks/digital_ocean.yml jinja[spacing]
 tasks/main.yml no-changed-when
+tasks/aws.yml no-changed-when

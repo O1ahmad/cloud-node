@@ -17,6 +17,8 @@
     machine_type: "{{ instance_type }}"
     zone: "{{ cloud_location }}"
     project: "{{ gcp_project }}"
+    scheduling:
+      preemptible: "{{ preemptible }}"
     disks:
       - auto_delete: true
         boot: true
