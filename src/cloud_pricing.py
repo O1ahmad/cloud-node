@@ -3,12 +3,28 @@ import boto3
 import json
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
+# Environment variables
 GCP_API_KEY = os.getenv('GCP_API_KEY')
 DO_API_TOKEN = os.getenv('DO_API_TOKEN')
+MONGO_URI = os.getenv('MONGO_URI')
+
+# Connect to MongoDB
+mongo_client = MongoClient(MONGO_URI)
+db = mongo_client.cloud_exchange
+collection = db.cloud_pricing
+
+# Helper function to save individual documents to MongoDB
+def save_documents(provider, items):
+    """Save items to MongoDB with associated provider."""
+    documents = [
+        {**item, "provider": provider, "timestamp": datetime.now(UTC)} for item in items
+    ]
+    collection.insert_many(documents)
 
 # AWS Pricing Functions
 def fetch_ec2_pricing(region, instance_type):
@@ -47,7 +63,7 @@ def fetch_ec2_pricing(region, instance_type):
         return {"success": True, "prices": all_prices}
     else:
         return {"success": False, "message": f"No on-demand pricing found for instance type '{instance_type}' in region '{region}'."}
-
+    
 def fetch_spot_price_history(region, instance_type):
     """Fetch Spot Price History for a specific EC2 instance type."""
     ec2_client = boto3.client('ec2', region_name=region)
@@ -76,7 +92,6 @@ def fetch_spot_price_history(region, instance_type):
     else:
         return {"success": False, "message": f"No spot price history found for instance type '{instance_type}' in region '{region}'."}
 
-
 # GCP Pricing Functions
 def fetch_gcp_pricing():
     """Fetch on-demand pricing from GCP, handling pagination."""
@@ -85,7 +100,6 @@ def fetch_gcp_pricing():
     next_page_token = None
 
     while True:
-        # Append the nextPageToken as a query parameter if it exists
         if next_page_token:
             paginated_url = f"{url}&pageToken={next_page_token}"
         else:
@@ -94,11 +108,10 @@ def fetch_gcp_pricing():
         response = requests.get(paginated_url)
         if response.status_code == 200:
             pricing_data = response.json()
-
             all_prices.extend(pricing_data.get('skus', []))
             next_page_token = pricing_data.get('nextPageToken')
             if not next_page_token:
-              break
+                break
         else:
             return {
                 "success": False,
@@ -135,12 +148,9 @@ def fetch_digitalocean_pricing():
 
     while url:
         response = requests.get(url, headers=headers)
-
         if response.status_code == 200:
             data = response.json()
-
             all_sizes.extend(data.get('sizes', []))
-
             url = data.get('links', {}).get('pages', {}).get('next')
         else:
             return {
@@ -151,41 +161,52 @@ def fetch_digitalocean_pricing():
 
     return {"success": True, "sizes": all_sizes}
 
-
 # Flask Endpoints
 @app.route('/pricing/<provider>', methods=['GET'])
 def pricing(provider):
     """API endpoint to fetch pricing for a specific provider."""
+    save = request.args.get('save', 'false').lower() == 'true'
     region = request.args.get('region')
     instance_type = request.args.get('instance_type')
 
     if provider == 'aws':
         if not region or not instance_type:
             return jsonify({"success": False, "message": "Both 'region' and 'instance_type' query parameters are required."}), 400
-        return jsonify(fetch_ec2_pricing(region, instance_type))
+        data = fetch_ec2_pricing(region, instance_type)
     elif provider == 'gcp':
-        return jsonify(fetch_gcp_pricing())
+        data = fetch_gcp_pricing()
     elif provider == 'digitalocean':
-        return jsonify(fetch_digitalocean_pricing())
+        data = fetch_digitalocean_pricing()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
+    if save and data.get("success"):
+        items = data.get("prices") if provider in ['aws', 'gcp'] else data.get("sizes")
+        save_documents(provider, items)
+
+    return jsonify(data)
 
 @app.route('/spot-pricing/<provider>', methods=['GET'])
 def spot_pricing(provider):
     """API endpoint to fetch spot pricing for a specific provider."""
+    save = request.args.get('save', 'false').lower() == 'true'
     region = request.args.get('region')
     instance_type = request.args.get('instance_type')
 
     if provider == 'aws':
         if not region or not instance_type:
             return jsonify({"success": False, "message": "Both 'region' and 'instance_type' query parameters are required."}), 400
-        return jsonify(fetch_spot_price_history(region, instance_type))
+        data = fetch_spot_price_history(region, instance_type)
     elif provider == 'gcp':
-        return jsonify(fetch_gcp_preemptible_pricing())
+        data = fetch_gcp_preemptible_pricing()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
+    if save and data.get("success"):
+        items = data.get("spotPrices") if provider == 'aws' else data.get("preemptiblePrices")
+        save_documents(provider, items)
+
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
