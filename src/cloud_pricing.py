@@ -16,15 +16,39 @@ MONGO_URI = os.getenv('MONGO_URI')
 # Connect to MongoDB
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client.cloud_exchange
-collection = db.cloud_pricing
 
-# Helper function to save individual documents to MongoDB
-def save_documents(provider, items):
+# Helper functions
+def save_documents(provider, collection, items):
     """Save items to MongoDB with associated provider."""
+    col = db[collection]
     documents = [
         {**item, "provider": provider, "timestamp": datetime.now(UTC)} for item in items
     ]
-    collection.insert_many(documents)
+    col.insert_many(documents)
+
+def fetch_all_regions():
+    """Fetch all available AWS EC2 regions."""
+    ec2_client = boto3.client('ec2', region_name='us-east-1')  # Use a default region for querying
+    response = ec2_client.describe_regions(AllRegions=True)
+    regions = [region['RegionName'] for region in response.get('Regions', [])]
+    return {"success": True, "regions": regions}
+
+def fetch_all_instance_types():
+    """Fetch all available AWS EC2 instance types, handling pagination."""
+    ec2_client = boto3.client('ec2', region_name='us-east-1')  # Use a default region for querying
+    instance_types = []
+    next_token = None
+
+    while True:
+        response = ec2_client.describe_instance_types(NextToken=next_token) if next_token else ec2_client.describe_instance_types()
+        instance_types.extend([it['InstanceType'] for it in response.get('InstanceTypes', [])])
+
+        # Get the next token for pagination
+        next_token = response.get('NextToken')
+        if not next_token:
+            break
+
+    return {"success": True, "instanceTypes": instance_types}
 
 # AWS Pricing Functions
 def fetch_ec2_pricing(region, instance_type):
@@ -162,6 +186,33 @@ def fetch_digitalocean_pricing():
     return {"success": True, "sizes": all_sizes}
 
 # Flask Endpoints
+@app.route('/regions/<provider>', methods=['GET'])
+def regions(provider='aws'):
+    """API endpoint to fetch all regions for a specific provider."""
+    save = request.args.get('save', 'false').lower() == 'true'
+    if provider == 'aws':
+        data = fetch_all_regions()
+    else:
+        return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
+
+    if save and data.get("success"):
+        save_documents(provider, "regions", [{"regions": data["regions"]}])
+
+    return jsonify(data)
+
+@app.route('/instance-types/<provider>', methods=['GET'])
+def instance_types(provider='aws'):
+    """API endpoint to fetch all instance/machine types for a specific provider."""
+    save = request.args.get('save', 'false').lower() == 'true'
+    if provider == 'aws':
+        data = fetch_all_instance_types()
+    else:
+        return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
+
+    if save and data.get("success"):
+        save_documents(provider, "instance_types", [{"instanceTypes": data["instanceTypes"]}])
+    return jsonify(data)
+
 @app.route('/pricing/<provider>', methods=['GET'])
 def pricing(provider):
     """API endpoint to fetch pricing for a specific provider."""
@@ -182,7 +233,7 @@ def pricing(provider):
 
     if save and data.get("success"):
         items = data.get("prices") if provider in ['aws', 'gcp'] else data.get("sizes")
-        save_documents(provider, items)
+        save_documents(provider, "cloud_pricing", items)
 
     return jsonify(data)
 
@@ -204,7 +255,7 @@ def spot_pricing(provider):
 
     if save and data.get("success"):
         items = data.get("spotPrices") if provider == 'aws' else data.get("preemptiblePrices")
-        save_documents(provider, items)
+        save_documents(provider, "cloud_pricing", items)
 
     return jsonify(data)
 
