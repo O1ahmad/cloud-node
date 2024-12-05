@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-GCP_API_KEY = os.getenv('GCP_API_KEY')  # Fetch the GCP API Key from environment variables
+GCP_API_KEY = os.getenv('GCP_API_KEY')
+DO_API_TOKEN = os.getenv('DO_API_TOKEN')
 
 # AWS Pricing Functions
 def fetch_ec2_pricing(region, instance_type):
@@ -125,6 +126,32 @@ def fetch_gcp_preemptible_pricing():
 
     return {"success": True, "preemptiblePrices": preemptible_prices}
 
+# DigitalOcean Pricing Functions
+def fetch_digitalocean_pricing():
+    """Fetch pricing information for DigitalOcean."""
+    url = "https://api.digitalocean.com/v2/sizes"
+    headers = {"Authorization": f"Bearer {DO_API_TOKEN}"}
+    all_sizes = []
+
+    while url:
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            all_sizes.extend(data.get('sizes', []))
+
+            url = data.get('links', {}).get('pages', {}).get('next')
+        else:
+            return {
+                "success": False,
+                "message": f"DigitalOcean Pricing API request failed with status code {response.status_code}",
+                "error": response.text
+            }
+
+    return {"success": True, "sizes": all_sizes}
+
+
 # Flask Endpoints
 @app.route('/pricing/<provider>', methods=['GET'])
 def pricing(provider):
@@ -138,6 +165,8 @@ def pricing(provider):
         return jsonify(fetch_ec2_pricing(region, instance_type))
     elif provider == 'gcp':
         return jsonify(fetch_gcp_pricing())
+    elif provider == 'digitalocean':
+        return jsonify(fetch_digitalocean_pricing())
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
