@@ -27,6 +27,8 @@ def save_documents(provider, collection, items):
     ]
     col.insert_many(documents)
 
+# Region functions
+
 def fetch_aws_regions():
     """Fetch all available AWS EC2 regions."""
     ec2_client = boto3.client('ec2', region_name='us-east-1')
@@ -61,6 +63,31 @@ def fetch_gcp_regions():
             "message": "An unexpected error occurred while fetching GCP regions.",
             "error": str(e)
         }
+
+def fetch_digitalocean_regions():
+    """Fetch all available regions from DigitalOcean."""
+    url = "https://api.digitalocean.com/v2/regions"
+    headers = {"Authorization": f"Bearer {DO_API_TOKEN}"}
+
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            regions = [region['slug'] for region in response.json().get('regions', [])]
+            return {"success": True, "regions": regions}
+        else:
+            return {
+                "success": False,
+                "message": f"DigitalOcean Regions API request failed with status code {response.status_code}",
+                "error": response.text
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "An unexpected error occurred while fetching DigitalOcean regions.",
+            "error": str(e)
+        }
+
+# Instance-Type functions
 
 def fetch_aws_instance_types():
     """Fetch all available AWS EC2 instance types, handling pagination."""
@@ -119,6 +146,34 @@ def fetch_gcp_instance_types():
         return {
             "success": False,
             "message": "An unexpected error occurred while fetching GCP machine types.",
+            "error": str(e)
+        }
+
+def fetch_digitalocean_instance_types():
+    """Fetch all available instance types from DigitalOcean."""
+    url = "https://api.digitalocean.com/v2/sizes"
+    headers = {"Authorization": f"Bearer {DO_API_TOKEN}"}
+
+    try:
+        all_instance_types = []
+        while url:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                all_instance_types.extend([size['slug'] for size in data.get('sizes', [])])
+                url = data.get('links', {}).get('pages', {}).get('next')  # Handle pagination
+            else:
+                return {
+                    "success": False,
+                    "message": f"DigitalOcean Instance Types API request failed with status code {response.status_code}",
+                    "error": response.text
+                }
+
+        return {"success": True, "instanceTypes": all_instance_types}
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "An unexpected error occurred while fetching DigitalOcean instance types.",
             "error": str(e)
         }
 
@@ -266,6 +321,8 @@ def regions(provider):
         data = fetch_aws_regions()
     elif provider == 'gcp':
         data = fetch_gcp_regions()
+    elif provider == 'digitalocean':
+        data = fetch_digitalocean_regions()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
@@ -282,11 +339,14 @@ def instance_types(provider):
         data = fetch_aws_instance_types()
     elif provider == 'gcp':
         data = fetch_gcp_instance_types()
+    elif provider == 'digitalocean':
+        data = fetch_digitalocean_instance_types()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
     if save and data.get("success"):
         save_documents(provider, "instance_types", [{"instanceTypes": data["instanceTypes"]}])
+
     return jsonify(data)
 
 @app.route('/pricing/<provider>', methods=['GET'])
