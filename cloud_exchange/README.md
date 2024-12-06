@@ -1,28 +1,17 @@
-### README: Cloud Pricing APIs
+### ☁️ Pricing APIs
 
 ---
 
 ## Overview
 
-This Python Flask application provides REST APIs to fetch and store pricing, regions, and instance type information for cloud providers, including **AWS**, **GCP**, and **DigitalOcean**. It also supports saving results into a MongoDB database.
-
----
-
-## Features
-
-1. Fetch **AWS EC2 regions** and **instance types**.
-2. Retrieve **on-demand pricing** for AWS, GCP, and DigitalOcean.
-3. Retrieve **spot pricing** for AWS and **preemptible pricing** for GCP.
-4. Store fetched data into MongoDB with provider details.
-
----
+Cloud Exchange is an application that provides REST APIs to fetch and store pricing, regions, and instance type information for cloud providers, including **AWS**, **GCP**, and **DigitalOcean**. It also supports saving results into a MongoDB database.
 
 ## Setup
 
 ### Prerequisites
 
 1. **Python 3.7+** and `pip`
-2. **MongoDB** instance [**Required for persistence**]
+2. **MongoDB** instance [**Required ONLY for persistence**]
 3. Cloud credentials:
    - AWS: Configured using the AWS CLI (`aws configure`).
    - GCP: `GCP_API_KEY` environment variable.
@@ -193,8 +182,8 @@ This project is being developed by O1.IO.
 
 🏆 always happy to help & donations are always welcome 💸
 
-ETH (Ethereum): 0x652eD9d222eeA1Ad843efec01E60C29bF2CF6E4c
+**ETH (Ethereum):** 0x652eD9d222eeA1Ad843efec01E60C29bF2CF6E4c
 
-BTC (Bitcoin): 3E8gMxwEnfAAWbvjoPVqSz6DvPfwQ1q8Jn
+**BTC (Bitcoin):** 3E8gMxwEnfAAWbvjoPVqSz6DvPfwQ1q8Jn
 
-ATOM (Cosmos): cosmos19vmcf5t68w6ug45mrwjyauh4ey99u9htrgqv09
+**ATOM (Cosmos):** cosmos19vmcf5t68w6ug45mrwjyauh4ey99u9htrgqv09
