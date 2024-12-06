@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 # Environment variables
 GCP_API_KEY = os.getenv('GCP_API_KEY')
+GCP_PROJECT_ID = os.getenv('GCP_PROJECT_ID')
 DO_API_TOKEN = os.getenv('DO_API_TOKEN')
 MONGO_URI = os.getenv('MONGO_URI')
 
@@ -26,14 +27,42 @@ def save_documents(provider, collection, items):
     ]
     col.insert_many(documents)
 
-def fetch_all_regions():
+def fetch_aws_regions():
     """Fetch all available AWS EC2 regions."""
     ec2_client = boto3.client('ec2', region_name='us-east-1')
     response = ec2_client.describe_regions(AllRegions=True)
     regions = [region['RegionName'] for region in response.get('Regions', [])]
+
     return {"success": True, "regions": regions}
 
-def fetch_all_instance_types():
+def fetch_gcp_regions():
+    """Fetch all available GCP regions using the Compute Engine API."""
+
+    try:
+        url = f"https://compute.googleapis.com/compute/v1/projects/{GCP_PROJECT_ID}/regions"
+
+        headers = {"Authorization": f"Bearer {GCP_API_KEY}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            # Extract region names from the response
+            regions = [region['name'] for region in response.json().get('items', [])]
+
+            return {"success": True, "regions": regions}
+        else:
+            return {
+                "success": False,
+                "message": f"GCP Regions API request failed with status code {response.status_code}",
+                "error": response.text
+            }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "An unexpected error occurred while fetching GCP regions.",
+            "error": str(e)
+        }
+
+def fetch_aws_instance_types():
     """Fetch all available AWS EC2 instance types, handling pagination."""
     ec2_client = boto3.client('ec2', region_name='us-east-1')
     instance_types = []
@@ -49,6 +78,49 @@ def fetch_all_instance_types():
             break
 
     return {"success": True, "instanceTypes": instance_types}
+
+def fetch_gcp_instance_types():
+    """Fetch all available GCP machine types using the Compute Engine API."""
+    # Base API URLs
+    zones_url = f"https://compute.googleapis.com/compute/v1/projects/{GCP_PROJECT_ID}/zones"
+    machine_types_url = "https://compute.googleapis.com/compute/v1/projects/{project_id}/zones/{zone}/machineTypes"
+    headers = {"Authorization": f"Bearer {GCP_API_KEY}"}
+
+    try:
+        # Fetch all zones for the project
+        zones_response = requests.get(zones_url, headers=headers)
+        if zones_response.status_code != 200:
+            return {
+                "success": False,
+                "message": "Failed to fetch zones for the project.",
+                "error": zones_response.text
+            }
+
+        zones = [zone['name'] for zone in zones_response.json().get('items', [])]
+        all_machine_types = set()
+        # Fetch machine types for each zone
+        for zone in zones:
+            url = machine_types_url.format(project_id=GCP_PROJECT_ID, zone=zone)
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                machine_types = {item['name'] for item in data.get('items', [])}
+                all_machine_types.update(machine_types)
+            else:
+                return {
+                    "success": False,
+                    "message": f"Failed to fetch machine types for zone '{zone}'",
+                    "error": response.text
+                }
+
+        return {"success": True, "instanceTypes": list(all_machine_types)}
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "An unexpected error occurred while fetching GCP machine types.",
+            "error": str(e)
+        }
 
 # AWS Pricing Functions
 def fetch_ec2_pricing(region, instance_type):
@@ -187,11 +259,13 @@ def fetch_digitalocean_pricing():
 
 # Flask Endpoints
 @app.route('/regions/<provider>', methods=['GET'])
-def regions(provider='aws'):
+def regions(provider):
     """API endpoint to fetch all regions for a specific provider."""
     save = request.args.get('save', 'false').lower() == 'true'
     if provider == 'aws':
-        data = fetch_all_regions()
+        data = fetch_aws_regions()
+    elif provider == 'gcp':
+        data = fetch_gcp_regions()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
@@ -201,11 +275,13 @@ def regions(provider='aws'):
     return jsonify(data)
 
 @app.route('/instance-types/<provider>', methods=['GET'])
-def instance_types(provider='aws'):
+def instance_types(provider):
     """API endpoint to fetch all instance/machine types for a specific provider."""
     save = request.args.get('save', 'false').lower() == 'true'
     if provider == 'aws':
-        data = fetch_all_instance_types()
+        data = fetch_aws_instance_types()
+    elif provider == 'gcp':
+        data = fetch_gcp_instance_types()
     else:
         return jsonify({"success": False, "message": f"Provider '{provider}' not supported."}), 400
 
