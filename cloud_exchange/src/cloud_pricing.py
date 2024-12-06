@@ -28,14 +28,14 @@ def save_documents(provider, collection, items):
 
 def fetch_all_regions():
     """Fetch all available AWS EC2 regions."""
-    ec2_client = boto3.client('ec2', region_name='us-east-1')  # Use a default region for querying
+    ec2_client = boto3.client('ec2', region_name='us-east-1')
     response = ec2_client.describe_regions(AllRegions=True)
     regions = [region['RegionName'] for region in response.get('Regions', [])]
     return {"success": True, "regions": regions}
 
 def fetch_all_instance_types():
     """Fetch all available AWS EC2 instance types, handling pagination."""
-    ec2_client = boto3.client('ec2', region_name='us-east-1')  # Use a default region for querying
+    ec2_client = boto3.client('ec2', region_name='us-east-1')
     instance_types = []
     next_token = None
 
