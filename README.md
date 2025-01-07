@@ -3,9 +3,7 @@
 <p><img src="https://code.benco.io/icon-collection/logos/ansible.svg" alt="ansible logo" title="ansible" align="left" height="60" /></p>
 
 # Cloud-Node
-[![Galaxy Role](https://img.shields.io/ansible/role/d/0x0i/cloud-node
-)](https://galaxy.ansible.com/ui/standalone/roles/0x0i/cloud-node/)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/0x0I/cloud-node?color=yellow)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/O1ahmad/cloud-node?color=yellow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 Provision a node across the various cloud infrastructure providers with security best practices.
