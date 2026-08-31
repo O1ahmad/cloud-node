@@ -28,26 +28,72 @@
     ssh_public_key: "{{ aws_keypair.key.name }}"
   when: ssh_public_key is undefined
 
+- name: Get the current spot price for the instance type
+  ansible.builtin.command: >
+    aws ec2 describe-spot-price-history
+      --region {{ cloud_location }}
+      --instance-types {{ instance_type }}
+      --product-descriptions {{ instance_os | default("Linux/UNIX") }}
+      --query "SpotPriceHistory[0].SpotPrice"
+  register: spot_price_command
+  when: preemptible | bool and spot_price is not defined
+
+- name: Set the spot price fact
+  ansible.builtin.set_fact:
+    spot_price: "{{ spot_price_command.stdout }}"
+  when: preemptible | bool and spot_price is not defined
+
 - name: Create an EC2 instance
-  amazon.aws.ec2_instance:
-    name: "{{ instance_name }}"
-    instance_type: "{{ instance_type }}"
-    region: "{{ cloud_location }}"
-    image_id: "{{ instance_image }}"
-    security_groups:
-      - default
-      - "{{ security_group.group_id }}"
-    wait: "{{ wait_for_ssh | bool }}"
-    key_name: "{{ ssh_public_key }}"
-    tags:
-      Name: "{{ instance_tag }}"
-    volumes:
-      - device_name: /dev/sda1
-        ebs:
-          volume_size: "{{ storage_size }}"
-    network:
-      assign_public_ip: "{{ public_ip }}"
-  register: ec2
+  block:
+    - name: Create an on-demand EC2 instance
+      amazon.aws.ec2_instance:
+        name: "{{ instance_name }}"
+        instance_type: "{{ instance_type }}"
+        region: "{{ cloud_location }}"
+        image_id: "{{ instance_image }}"
+        security_groups:
+          - default
+          - "{{ security_group.group_id }}"
+        wait: "{{ wait_for_ssh | bool }}"
+        key_name: "{{ ssh_public_key }}"
+        tags:
+          Name: "{{ instance_tag }}"
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "{{ storage_size }}"
+        network:
+          assign_public_ip: "{{ public_ip }}"
+      register: ec2
+      when: not preemptible | bool
+
+    - name: Create a preemptible EC2 spot instance
+      amazon.aws.ec2_spot_instance:
+        count: 1
+        region: "{{ cloud_location }}"
+        spot_price: "{{ spot_price }}"
+        launch_specification:
+          instance_type: "{{ instance_type }}"
+          image_id: "{{ instance_image }}"
+          key_name: "{{ ssh_public_key }}"
+          security_groups:
+            - default
+            - "{{ security_group.group_id }}"
+          block_device_mappings:
+            - device_name: /dev/sda1
+              ebs:
+                volume_size: "{{ storage_size }}"
+        tags:
+          Name: "{{ instance_tag }}"
+      register: ec2_spot
+      when: preemptible | bool
+
+    - name: Set unified EC2 variable for spot instance
+      set_fact:
+        ec2:
+          instances:
+            - public_ip_address: "{{ ec2_spot.instances[0].public_ip }}"
+      when: preemptible | bool
 
 - name: Wait for the instance to be reachable via SSH
   ansible.builtin.wait_for:
